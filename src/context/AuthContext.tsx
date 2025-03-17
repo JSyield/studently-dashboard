@@ -5,10 +5,14 @@ import { getSession, signIn, signOut } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 
+type UserRole = 'admin' | 'user';
+
 type AuthContextType = {
   session: Session | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  userRoles: UserRole[];
+  isAdmin: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: any }>;
   logout: () => Promise<void>;
 };
@@ -18,7 +22,26 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const { toast } = useToast();
+
+  // Function to fetch user roles
+  const fetchUserRoles = async (userId: string) => {
+    try {
+      const { data, error } = await supabase.rpc('get_user_roles', { user_id: userId });
+      
+      if (error) {
+        console.error("Error fetching user roles:", error);
+        return;
+      }
+      
+      if (data) {
+        setUserRoles(data.map(r => r.role));
+      }
+    } catch (err) {
+      console.error("Unexpected error during role fetch:", err);
+    }
+  };
 
   useEffect(() => {
     async function loadSession() {
@@ -31,6 +54,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         setSession(session);
+        
+        if (session?.user) {
+          await fetchUserRoles(session.user.id);
+        }
       } catch (err) {
         console.error("Unexpected error during session fetch:", err);
       } finally {
@@ -41,9 +68,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadSession();
 
     // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log("Auth state changed:", _event, session);
       setSession(session);
+      
+      if (session?.user) {
+        await fetchUserRoles(session.user.id);
+      } else {
+        setUserRoles([]);
+      }
+      
       setIsLoading(false);
     });
 
@@ -67,6 +101,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setSession(data.session);
+      
+      if (data.session?.user) {
+        await fetchUserRoles(data.session.user.id);
+      }
+      
       toast({
         title: "Welcome back",
         description: "You have been successfully logged in",
@@ -100,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       setSession(null);
+      setUserRoles([]);
       toast({
         title: "Signed out successfully",
       });
@@ -121,6 +161,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         isLoading,
         isAuthenticated: !!session,
+        userRoles,
+        isAdmin: userRoles.includes('admin'),
         login,
         logout,
       }}
