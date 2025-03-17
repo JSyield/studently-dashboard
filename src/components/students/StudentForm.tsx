@@ -96,6 +96,7 @@ export default function StudentForm({ onSuccess }: StudentFormProps) {
     addStudentMutation.mutate({
       ...values,
       fees_status: "unpaid",
+      enrollment_date: new Date().toISOString().split('T')[0], // Add today's date as enrollment date
     });
   };
   
