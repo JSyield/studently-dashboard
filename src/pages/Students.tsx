@@ -38,7 +38,7 @@ export default function Students() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const { data, isLoading } = useQuery({
+  const { data: studentsData, isLoading } = useQuery({
     queryKey: ['students'],
     queryFn: getStudents,
   });
@@ -75,11 +75,12 @@ export default function Students() {
   };
 
   // Filter students based on search query
-  const filteredStudents = data?.data?.filter(student => 
+  const students = studentsData?.data || [];
+  const filteredStudents = students.filter(student => 
     student.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     student.parent_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (student.courses?.name && student.courses.name.toLowerCase().includes(searchQuery.toLowerCase()))
-  ) || [];
+  );
 
   return (
     <div className="grid gap-4">

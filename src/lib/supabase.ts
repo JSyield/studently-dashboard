@@ -108,6 +108,9 @@ export const createStudent = async (student: Omit<Student, "id" | "created_at">)
   return { data, error };
 };
 
+// Alias for StudentForm compatibility
+export const addStudent = createStudent;
+
 export const updateStudent = async (id: string, student: Partial<Omit<Student, "id" | "created_at">>) => {
   const { data, error } = await supabase
     .from("students")

@@ -37,7 +37,7 @@ export default function CoursesPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const { data: courses, isLoading } = useQuery({
+  const { data: coursesData, isLoading } = useQuery({
     queryKey: ['courses'],
     queryFn: getCourses,
   });
@@ -68,10 +68,11 @@ export default function CoursesPage() {
   };
 
   // Filter courses based on search query
-  const filteredCourses = courses?.filter(course => 
+  const courses = coursesData?.data || [];
+  const filteredCourses = courses.filter(course => 
     course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     course.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  );
 
   return (
     <div className="grid gap-4">

@@ -24,13 +24,13 @@ export default function CourseDetail() {
     enabled: !!id,
   });
 
-  const course = courseData?.data?.[0];
+  const course = courseData?.data;
   
   // Fetch students in this course
   const { data: studentsData, isLoading: isStudentsLoading } = useQuery({
     queryKey: ['courseStudents', id],
     queryFn: async () => {
-      const { data, error } = await getCourse(id as string, true);
+      const { data, error } = await getCourse(id as string);
       if (error) throw error;
       return data;
     },

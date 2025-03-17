@@ -35,7 +35,7 @@ const formSchema = z.object({
   address: z.string().min(5, "Address must be at least 5 characters"),
   contact_number: z.string().min(10, "Contact number must be valid"),
   course_id: z.string().optional(),
-  fees: z.string().transform((val) => parseFloat(val)),
+  fees: z.string().transform((val) => Number(val)),
 });
 
 type FormValues = z.infer<typeof formSchema>;
