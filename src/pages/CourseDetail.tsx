@@ -1,136 +1,161 @@
 
-import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getCourseById, getStudentsByCourseId } from "@/lib/supabase";
+import { useParams, Link } from "react-router-dom";
+import { getCourse } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+import { ArrowLeft, Clock, DollarSign, BookOpen, Users } from "lucide-react";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft } from "lucide-react";
 
-export default function CourseDetailPage() {
+export default function CourseDetail() {
   const { id } = useParams();
   
-  const { data: course, isLoading: isLoadingCourse } = useQuery({
+  // Fetch course details
+  const { data: courseData, isLoading } = useQuery({
     queryKey: ['course', id],
-    queryFn: () => getCourseById(id as string),
+    queryFn: () => getCourse(id as string),
     enabled: !!id,
   });
 
-  const { data: students, isLoading: isLoadingStudents } = useQuery({
+  const course = courseData?.data?.[0];
+  
+  // Fetch students in this course
+  const { data: studentsData, isLoading: isStudentsLoading } = useQuery({
     queryKey: ['courseStudents', id],
-    queryFn: () => getStudentsByCourseId(id as string),
+    queryFn: async () => {
+      const { data, error } = await getCourse(id as string, true);
+      if (error) throw error;
+      return data;
+    },
     enabled: !!id,
   });
-
-  if (isLoadingCourse || isLoadingStudents) {
-    return (
-      <div className="flex h-96 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-48">Loading course details...</div>;
   }
 
   if (!course) {
     return (
-      <div className="flex flex-col items-center justify-center h-96 gap-4">
-        <h2 className="text-2xl font-bold">Course not found</h2>
-        <Button asChild>
-          <Link to="/courses">Back to Courses</Link>
-        </Button>
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Link to="/courses">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Courses
+            </Button>
+          </Link>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8">
+              <h2 className="text-xl font-semibold">Course not found</h2>
+              <p className="text-muted-foreground">The course you're looking for doesn't exist or has been removed.</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
+  const students = studentsData?.filter(item => item.course_id === id) || [];
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" asChild>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
           <Link to="/courses">
-            <ArrowLeft className="h-4 w-4" />
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Courses
+            </Button>
           </Link>
+        </div>
+        <Button variant="outline" size="sm">
+          Edit Course
         </Button>
-        <h1 className="text-3xl font-bold">Course Details</h1>
       </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
+      
+      <div className="grid gap-6 md:grid-cols-3">
         <Card>
-          <CardHeader>
-            <CardTitle>Course Information</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Course Name</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Name</p>
-              <p className="text-lg font-semibold">{course.name}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Duration</p>
-              <p>{course.duration}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Fees</p>
-              <p className="font-medium">${course.fees}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Description</p>
-              <p>{course.description || "No description available"}</p>
+          <CardContent>
+            <div className="flex items-center">
+              <BookOpen className="h-4 w-4 mr-2 text-muted-foreground" />
+              <p className="text-2xl font-bold">{course.name}</p>
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardHeader>
-            <CardTitle>Enrollment Statistics</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Duration</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Students</p>
-              <p className="text-3xl font-bold">{students?.length || 0}</p>
+          <CardContent>
+            <div className="flex items-center">
+              <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+              <p className="text-2xl font-bold">{course.duration}</p>
             </div>
-            {/* Additional statistics could go here */}
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Fees</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center">
+              <DollarSign className="h-4 w-4 mr-2 text-muted-foreground" />
+              <p className="text-2xl font-bold">${course.fees}</p>
+            </div>
           </CardContent>
         </Card>
       </div>
-
+      
       <Card>
         <CardHeader>
-          <CardTitle>Enrolled Students</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>
+              <div className="flex items-center">
+                <Users className="h-5 w-5 mr-2" />
+                Students Enrolled
+              </div>
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">{students.length} students</p>
+          </div>
         </CardHeader>
         <CardContent>
-          {students && students.length > 0 ? (
+          {isStudentsLoading ? (
+            <div>Loading students...</div>
+          ) : students.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Enrollment Date</TableHead>
+                  <TableHead>Parent</TableHead>
                   <TableHead>Fees Status</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {students.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell>{student.full_name}</TableCell>
-                    <TableCell>{new Date(student.enrollment_date).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      <Badge variant={
-                        student.fees_status === "paid" ? "default" :
-                        student.fees_status === "partial" ? "outline" : "destructive"
-                      }>
-                        {student.fees_status.toUpperCase()}
-                      </Badge>
-                    </TableCell>
+                    <TableCell>{student.parent_name}</TableCell>
+                    <TableCell>{student.fees_status}</TableCell>
+                    <TableCell>{student.contact_number}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="outline" asChild size="sm">
-                        <Link to={`/students/${student.id}`}>View Details</Link>
+                      <Button asChild variant="ghost" size="sm">
+                        <Link to={`/students/${student.id}`}>View</Link>
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -138,10 +163,23 @@ export default function CourseDetailPage() {
               </TableBody>
             </Table>
           ) : (
-            <p className="text-center py-4">No students enrolled in this course yet.</p>
+            <div className="text-center py-4 text-muted-foreground">
+              No students enrolled in this course yet.
+            </div>
           )}
         </CardContent>
       </Card>
+      
+      {course.description && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Course Description</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>{course.description}</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

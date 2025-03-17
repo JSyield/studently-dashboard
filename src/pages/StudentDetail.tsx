@@ -1,131 +1,155 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getStudentById, updateStudent } from "@/lib/supabase";
+import { getStudent } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Calendar, User, Home, Phone, BookOpen, DollarSign } from "lucide-react";
 
-export default function StudentDetailPage() {
+export default function StudentDetail() {
   const { id } = useParams();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [isLoading, setIsLoading] = useState(false);
   
-  const { data: student, isLoading } = useQuery({
+  // Fetch student details
+  const { data: student, isLoading: isStudentLoading } = useQuery({
     queryKey: ['student', id],
-    queryFn: () => getStudentById(id as string),
+    queryFn: () => getStudent(id as string),
     enabled: !!id,
   });
 
-  if (isLoading) {
+  if (isStudentLoading) {
+    return <div className="flex items-center justify-center h-48">Loading student details...</div>;
+  }
+
+  if (!student?.data) {
     return (
-      <div className="flex h-96 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Link to="/students">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Students
+            </Button>
+          </Link>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8">
+              <h2 className="text-xl font-semibold">Student not found</h2>
+              <p className="text-muted-foreground">The student you're looking for doesn't exist or has been removed.</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  if (!student) {
-    return (
-      <div className="flex flex-col items-center justify-center h-96 gap-4">
-        <h2 className="text-2xl font-bold">Student not found</h2>
-        <Button asChild>
-          <Link to="/students">Back to Students</Link>
-        </Button>
-      </div>
-    );
-  }
+  const studentData = student.data;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" asChild>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
           <Link to="/students">
-            <ArrowLeft className="h-4 w-4" />
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Students
+            </Button>
           </Link>
+        </div>
+        <Button variant="outline" size="sm">
+          Edit Student
         </Button>
-        <h1 className="text-3xl font-bold">Student Details</h1>
       </div>
-
-      <div className="grid md:grid-cols-3 gap-6">
+      
+      <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
+            <CardTitle>Student Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Name</p>
-              <p className="text-lg font-semibold">{student.full_name}</p>
+            <div className="flex items-center space-x-4">
+              <User className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium leading-none">Full Name</p>
+                <p className="text-sm text-muted-foreground">{studentData.full_name}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Parent/Guardian</p>
-              <p>{student.parent_name}</p>
+            
+            <div className="flex items-center space-x-4">
+              <User className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium leading-none">Parent/Guardian Name</p>
+                <p className="text-sm text-muted-foreground">{studentData.parent_name}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Contact</p>
-              <p>{student.contact_number}</p>
+            
+            <div className="flex items-center space-x-4">
+              <Home className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium leading-none">Address</p>
+                <p className="text-sm text-muted-foreground">{studentData.address}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Address</p>
-              <p>{student.address}</p>
+            
+            <div className="flex items-center space-x-4">
+              <Phone className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium leading-none">Contact Number</p>
+                <p className="text-sm text-muted-foreground">{studentData.contact_number}</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <Calendar className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium leading-none">Enrollment Date</p>
+                <p className="text-sm text-muted-foreground">
+                  {new Date(studentData.enrollment_date).toLocaleDateString()}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
-
+        
         <Card>
           <CardHeader>
-            <CardTitle>Course Information</CardTitle>
+            <CardTitle>Course & Payment Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Enrolled Course</p>
-              <p className="text-lg font-semibold">{student.courses?.name || "Not enrolled in any course"}</p>
+            <div className="flex items-center space-x-4">
+              <BookOpen className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium leading-none">Course</p>
+                <p className="text-sm text-muted-foreground">
+                  {studentData.courses?.name || "Not assigned"}
+                </p>
+              </div>
             </div>
-            {student.courses && (
-              <>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Duration</p>
-                  <p>{student.courses.duration}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Description</p>
-                  <p>{student.courses.description || "No description available"}</p>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Fees Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Fees</p>
-              <p className="text-lg font-semibold">${student.fees}</p>
+            
+            <div className="flex items-center space-x-4">
+              <DollarSign className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium leading-none">Fees</p>
+                <p className="text-sm text-muted-foreground">${studentData.fees}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Status</p>
-              <Badge variant={
-                student.fees_status === "paid" ? "default" :
-                student.fees_status === "partial" ? "outline" : "destructive"
-              } className="mt-1">
-                {student.fees_status.toUpperCase()}
-              </Badge>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Enrollment Date</p>
-              <p>{new Date(student.enrollment_date).toLocaleDateString()}</p>
+            
+            <div className="flex items-center space-x-4">
+              <DollarSign className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium leading-none">Payment Status</p>
+                <Badge variant={studentData.fees_status === "paid" ? "default" : 
+                       studentData.fees_status === "partial" ? "outline" : "destructive"}>
+                  {studentData.fees_status}
+                </Badge>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Additional sections like payment history could go here */}
     </div>
   );
 }

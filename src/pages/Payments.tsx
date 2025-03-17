@@ -24,7 +24,8 @@ export default function PaymentsPage() {
     queryFn: getPayments,
   });
 
-  const filteredPayments = data?.filter(payment => 
+  // Filter payments based on search query
+  const filteredPayments = data?.data?.filter(payment => 
     payment.students?.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     payment.notes?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];

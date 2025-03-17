@@ -145,8 +145,8 @@ export default function Students() {
                     <TableCell>{student.courses?.name || "Not assigned"}</TableCell>
                     <TableCell>
                       <Badge variant={
-                        student.fees_status === "paid" ? "success" :
-                        student.fees_status === "partial" ? "warning" : "destructive"
+                        student.fees_status === "paid" ? "default" :
+                        student.fees_status === "partial" ? "outline" : "destructive"
                       }>
                         {student.fees_status}
                       </Badge>
