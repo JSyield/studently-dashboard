@@ -58,6 +58,7 @@ export default function Students() {
         description: "Failed to delete the student.",
         variant: "destructive",
       });
+      console.error("Error deleting student:", error);
     },
   });
 
@@ -77,8 +78,8 @@ export default function Students() {
   // Filter students based on search query
   const students = studentsData?.data || [];
   const filteredStudents = students.filter(student => 
-    student.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    student.parent_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    student.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    student.parent_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (student.courses?.name && student.courses.name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 

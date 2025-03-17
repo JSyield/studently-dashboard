@@ -35,7 +35,7 @@ const formSchema = z.object({
   address: z.string().min(5, "Address must be at least 5 characters"),
   contact_number: z.string().min(10, "Contact number must be valid"),
   course_id: z.string().optional(),
-  fees: z.string().transform((val) => Number(val)),
+  fees: z.coerce.number().nonnegative("Fees must be a positive number"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -63,7 +63,7 @@ export default function StudentForm({ onSuccess }: StudentFormProps) {
       parent_name: "",
       address: "",
       contact_number: "",
-      fees: "0",
+      fees: 0,
     },
   });
   
@@ -87,6 +87,7 @@ export default function StudentForm({ onSuccess }: StudentFormProps) {
         variant: "destructive",
       });
       setIsSubmitting(false);
+      console.error("Error adding student:", error);
     },
   });
   
@@ -95,8 +96,13 @@ export default function StudentForm({ onSuccess }: StudentFormProps) {
     setIsSubmitting(true);
     addStudentMutation.mutate({
       ...values,
+      full_name: values.full_name, // Ensure required fields are explicitly set
+      parent_name: values.parent_name,
+      address: values.address,
+      contact_number: values.contact_number,
+      fees: values.fees,
       fees_status: "unpaid",
-      enrollment_date: new Date().toISOString().split('T')[0], // Add today's date as enrollment date
+      enrollment_date: new Date().toISOString().split('T')[0],
     });
   };
   

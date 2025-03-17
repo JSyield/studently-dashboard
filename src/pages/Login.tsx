@@ -1,34 +1,27 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 
+// Form validation schema
 const formSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string().email(),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 export default function LoginPage() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -38,41 +31,28 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit = async (data: FormValues) => {
-    setIsLoading(true);
-    try {
-      const result = await login(data.email, data.password);
-      if (result.success) {
-        navigate("/");
-      } else {
-        toast({
-          title: "Login failed",
-          description: "Please check your credentials and try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Login failed",
-        description: "An unexpected error occurred.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+  const onSubmit = async (values: FormValues) => {
+    setIsSubmitting(true);
+    const { success } = await login(values.email, values.password);
+
+    setIsSubmitting(false);
+    if (success) {
+      navigate("/");
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col justify-center">
-      <div className="container max-w-md">
-        <div className="flex flex-col space-y-2 text-center mb-8">
-          <h1 className="text-3xl font-bold">CoachCenter</h1>
-          <p className="text-muted-foreground">Admin Login</p>
-        </div>
-
-        <div className="bg-card p-8 rounded-lg shadow-sm border">
+    <div className="flex items-center justify-center min-h-screen bg-background p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold">Sign in</CardTitle>
+          <CardDescription>
+            Enter your email and password to access your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="email"
@@ -80,7 +60,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="admin@example.com" {...field} />
+                      <Input placeholder="you@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -93,27 +73,28 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••" {...field} />
+                      <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Login"}
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Signing in..." : "Sign in"}
               </Button>
             </form>
           </Form>
-          
-          <div className="mt-6 text-center text-sm">
-            <p className="text-muted-foreground">
-              Default admin credentials:<br/>
-              Email: jabber.itsss@yield4finance.com<br/>
-              Password: sbi123SBI@
-            </p>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+        <CardFooter className="text-center text-sm text-muted-foreground">
+          <p className="w-full">
+            Note: For development purposes, you can create a new account in Supabase dashboard.
+          </p>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

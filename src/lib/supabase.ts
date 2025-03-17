@@ -1,10 +1,9 @@
 
 import { createClient } from "@supabase/supabase-js";
 
-// These will be replaced by proper environment variables
-// Using placeholders for now - actual values will be set up when connecting to Supabase
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "your-supabase-url";
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || "your-anon-key";
+// Use the environment variables from our Supabase integration file
+const supabaseUrl = "https://gieuqalvgvfbdcjbuvnl.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpZXVxYWx2Z3ZmYmRjamJ1dm5sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODc3MTIsImV4cCI6MjA1Nzc2MzcxMn0.r-NEYoiLrKayWLXNvRZIeOzF5_Oub-0b28e_gMCYs_s";
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -25,23 +24,6 @@ export const signOut = async () => {
 export const getSession = async () => {
   const { data, error } = await supabase.auth.getSession();
   return { session: data.session, error };
-};
-
-// Create database schemas
-export const initializeDatabase = async () => {
-  // This would be done through migrations in a production environment
-  // But for demonstration, we'll create tables if they don't exist
-
-  // Students table
-  const { error: studentsError } = await supabase.rpc("init_students_table", {});
-
-  // Courses table
-  const { error: coursesError } = await supabase.rpc("init_courses_table", {});
-
-  // Payments table
-  const { error: paymentsError } = await supabase.rpc("init_payments_table", {});
-
-  return { studentsError, coursesError, paymentsError };
 };
 
 // Database types
@@ -98,7 +80,7 @@ export const getStudent = async (id: string) => {
   return { data, error };
 };
 
-export const createStudent = async (student: Omit<Student, "id" | "created_at">) => {
+export const addStudent = async (student: Omit<Student, "id" | "created_at">) => {
   const { data, error } = await supabase
     .from("students")
     .insert(student)
@@ -107,9 +89,6 @@ export const createStudent = async (student: Omit<Student, "id" | "created_at">)
   
   return { data, error };
 };
-
-// Alias for StudentForm compatibility
-export const addStudent = createStudent;
 
 export const updateStudent = async (id: string, student: Partial<Omit<Student, "id" | "created_at">>) => {
   const { data, error } = await supabase

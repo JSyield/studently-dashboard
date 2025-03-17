@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { Session } from "@supabase/supabase-js";
 import { getSession, signIn, signOut } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 type AuthContextType = {
   session: Session | null;
@@ -41,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state changed:", _event, session);
       setSession(session);
       setIsLoading(false);
     });
@@ -137,6 +139,3 @@ export const useAuth = () => {
   
   return context;
 };
-
-// Import at the end to avoid circular dependencies
-import { supabase } from "@/lib/supabase";
