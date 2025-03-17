@@ -9,13 +9,147 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      courses: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          duration: string
+          fees: number
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          duration: string
+          fees: number
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          duration?: string
+          fees?: number
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          notes: string | null
+          payment_date: string
+          student_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          student_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          address: string
+          contact_number: string
+          course_id: string | null
+          created_at: string | null
+          enrollment_date: string
+          fees: number
+          fees_status: string
+          full_name: string
+          id: string
+          parent_name: string
+        }
+        Insert: {
+          address: string
+          contact_number: string
+          course_id?: string | null
+          created_at?: string | null
+          enrollment_date?: string
+          fees: number
+          fees_status?: string
+          full_name: string
+          id?: string
+          parent_name: string
+        }
+        Update: {
+          address?: string
+          contact_number?: string
+          course_id?: string | null
+          created_at?: string | null
+          enrollment_date?: string
+          fees?: number
+          fees_status?: string
+          full_name?: string
+          id?: string
+          parent_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_courses_with_student_count: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          duration: string
+          fees: number
+          description: string
+          student_count: number
+        }[]
+      }
+      get_popular_courses: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          course_id: string
+          course_name: string
+          student_count: number
+        }[]
+      }
+      get_total_fees_collected: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      get_total_pending_fees: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
